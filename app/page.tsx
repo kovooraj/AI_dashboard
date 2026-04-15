@@ -1,4 +1,4 @@
-import { DashboardClient } from '@/components/DashboardClient';
+import { DashboardShell } from '@/components/DashboardShell';
 import type { DashboardData, WorkflowHealthData } from '@/lib/types';
 
 async function getDashboardData(): Promise<DashboardData> {
@@ -50,5 +50,5 @@ async function getDashboardData(): Promise<DashboardData> {
 
 export default async function Page() {
   const data = await getDashboardData();
-  return <DashboardClient initialData={data} />;
+  return <DashboardShell initialData={data} />;
 }

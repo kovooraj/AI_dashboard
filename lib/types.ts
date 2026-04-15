@@ -33,3 +33,23 @@ export interface DashboardData {
   fetchedAt: string;
   error?: string;
 }
+
+export type HistoryPeriod = 'week' | 'month' | 'quarter' | 'year';
+
+export interface DailyBucket {
+  date: string;
+  total: number;
+  success: number;
+  error: number;
+}
+
+export interface HistoryData {
+  period: HistoryPeriod;
+  workflowId: string | null;
+  buckets: DailyBucket[];
+  totalRuns: number;
+  successRuns: number;
+  errorRuns: number;
+  fetchedAt: string;
+  error?: string;
+}

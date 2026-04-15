@@ -66,6 +66,35 @@ export async function fetchRecentExecutions(
   return data.data ?? [];
 }
 
+// Fetches executions for a workflow started on or after `since`,
+// up to `limit` results (max 250 — n8n hard cap).
+export async function fetchExecutionsForPeriod(
+  workflowId: string,
+  since: Date,
+  limit = 250
+): Promise<N8nExecution[]> {
+  if (!BASE_URL || !API_KEY) {
+    throw new Error('N8N_BASE_URL and N8N_API_KEY environment variables are required');
+  }
+
+  const url = new URL(`${BASE_URL}/api/v1/executions`);
+  url.searchParams.set('workflowId', workflowId);
+  url.searchParams.set('limit', String(Math.min(limit, 250)));
+
+  const res = await fetch(url.toString(), {
+    headers: headers(),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error(`n8n executions API returned ${res.status}: ${await res.text()}`);
+  }
+
+  const data = await res.json();
+  const all: N8nExecution[] = data.data ?? [];
+  return all.filter((e) => e.startedAt && new Date(e.startedAt) >= since);
+}
+
 // Fetches executions for multiple workflows with a concurrency limit of 5
 // to avoid hitting n8n's default rate limit of 5 req/s
 export async function fetchExecutionsBatch(
