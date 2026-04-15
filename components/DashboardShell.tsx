@@ -68,52 +68,36 @@ export function DashboardShell({ initialData }: Props) {
       <main className="flex-1 min-w-0 flex flex-col overflow-hidden" style={{ background: 'var(--dash-bg)' }}>
         {/* Top bar */}
         <div
-          className="flex items-center justify-between px-6 py-3 flex-shrink-0"
+          className="flex items-center justify-between px-6 py-3 flex-shrink-0 animate-fade-in"
           style={{ borderBottom: '1px solid var(--dash-border)' }}
         >
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold" style={{ color: 'var(--dash-text)' }}>
-                n8n Monitor
-              </span>
-              {refreshing && (
-                <span className="text-xs animate-pulse" style={{ color: 'var(--dash-blue)' }}>
-                  refreshing…
-                </span>
-              )}
-            </div>
-            {/* Status pills */}
+            <span className="text-sm font-semibold tracking-tight" style={{ color: 'var(--dash-text)', letterSpacing: '-0.01em' }}>
+              n8n Monitor
+            </span>
             {failingCount > 0 && (
-              <span
-                className="rounded-full px-2 py-0.5 text-xs font-bold"
-                style={{ background: 'rgba(252,129,129,0.15)', color: 'var(--dash-red)' }}
-              >
+              <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: 'rgba(255,92,92,0.12)', color: 'var(--dash-red)' }}>
                 {failingCount} failing
               </span>
             )}
             {degradedCount > 0 && (
-              <span
-                className="rounded-full px-2 py-0.5 text-xs font-bold"
-                style={{ background: 'rgba(246,224,94,0.15)', color: 'var(--dash-yellow)' }}
-              >
+              <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: 'rgba(251,191,36,0.12)', color: 'var(--dash-yellow)' }}>
                 {degradedCount} degraded
               </span>
             )}
+            {refreshing && (
+              <span className="text-xs animate-pulse" style={{ color: 'var(--dash-blue)' }}>refreshing…</span>
+            )}
           </div>
-
           <div className="flex items-center gap-3">
-            <span className="text-xs tabular-nums" style={{ color: 'var(--dash-muted)' }}>
-              {countdown}s
-            </span>
+            <span className="text-xs tabular-nums" style={{ color: 'var(--dash-muted)' }}>{countdown}s</span>
             <button
               onClick={refresh}
               disabled={refreshing}
-              className="rounded-md px-2.5 py-1 text-xs font-medium transition-all disabled:opacity-40"
-              style={{
-                background: 'var(--dash-card)',
-                border: '1px solid var(--dash-border)',
-                color: 'var(--dash-text)',
-              }}
+              className="rounded-md px-3 py-1 text-xs font-medium transition-all duration-150 disabled:opacity-40"
+              style={{ background: 'var(--dash-card)', border: '1px solid var(--dash-border)', color: 'var(--dash-text)' }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--dash-subtle)')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--dash-border)')}
             >
               ↻ Refresh
             </button>
