@@ -2,11 +2,5 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "npm install",
-  "env": {
-    "NOTION_TOKEN": "@notion_token",
-    "N8N_BASE_URL": "@n8n_base_url",
-    "N8N_API_KEY": "@n8n_api_key",
-    "CLICKUP_API_KEY": "@clickup_api_key"
-  }
+  "installCommand": "npm install"
 }
