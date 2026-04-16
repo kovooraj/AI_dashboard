@@ -1,3 +1,4 @@
+// ── Existing N8N workflow types (preserved) ─────────────────────────────────
 export interface N8nWorkflow {
   id: string;
   name: string;
@@ -52,4 +53,74 @@ export interface HistoryData {
   errorRuns: number;
   fetchedAt: string;
   error?: string;
+}
+
+// ── Dashboard period ─────────────────────────────────────────────────────────
+export type DashboardPeriod = 'weekly' | 'monthly' | 'quarterly' | 'annually';
+
+// ── Notion snapshot types ────────────────────────────────────────────────────
+export interface N8NSnapshot {
+  id: string;
+  weekLabel: string;
+  weekNumber: number;
+  quarter: string;
+  totalTriggers: number;
+  failedTriggers: number;
+  activeWorkflows: number;
+  newWorkflows: number;
+  hoursSaved: number;
+  revenueImpact: number;
+}
+
+export interface FINSnapshot {
+  id: string;
+  weekLabel: string;
+  finInvolvement: number;
+  finResolved: number;
+  finAutomationRate: number;
+  csat: number;
+  hoursSaved: number;
+  revenueImpact: number;
+}
+
+export interface ElevenLabsSnapshot {
+  id: string;
+  weekLabel: string;
+  calls: number;
+  avgDuration: number;
+  transferRate: number;
+  agents: number;
+  hoursSaved: number;
+  revenueImpact: number;
+}
+
+// ── ClickUp task type ────────────────────────────────────────────────────────
+export interface ClickUpTask {
+  id: string;
+  name: string;
+  status: string;
+  statusColor: string;
+  url: string;
+  assignees: string[];
+  updatedAt: string;
+}
+
+// ── Chart data points ────────────────────────────────────────────────────────
+export interface ChartPoint {
+  label: string;
+  success: number;
+  error: number;
+}
+
+export interface VolumePoint {
+  label: string;
+  total: number;
+  resolved: number;
+}
+
+// ── Sidebar workflow item ────────────────────────────────────────────────────
+export interface SidebarWorkflow {
+  id: string;
+  name: string;
+  health: 'healthy' | 'degraded' | 'failing';
 }

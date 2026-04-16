@@ -10,8 +10,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "n8n Workflow Monitor",
-  description: "Monitor your n8n workflow health, executions, and failures",
+  title: "AI Benchmark Dashboard | Alex Kovoor",
+  description: "AI Automation performance benchmarks — N8N, FIN, ElevenLabs",
 };
 
 export default function RootLayout({
