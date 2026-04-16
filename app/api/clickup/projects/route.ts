@@ -1,17 +1,44 @@
 import { NextResponse } from 'next/server';
-import type { ClickUpTask } from '@/lib/types';
+import type { ClickUpTask, TaskPlatform } from '@/lib/types';
 
 const LIST_ID = '901112680070';
+
+function detectPlatform(name: string): TaskPlatform {
+  const n = name.toLowerCase();
+  // FIN / Intercom chat bot
+  if (
+    n.includes('fin tool') || n.includes(' fin ') || n.startsWith('fin') ||
+    n.includes('refund') || n.includes('resend proof') || n.includes('change spec') ||
+    n.includes('order cancel') || n.includes('chat') || n.includes('intercom')
+  ) return 'fin';
+  // ElevenLabs voice / call
+  if (
+    n.includes('elevenlabs') || n.includes('eleven labs') ||
+    n.includes('call agent') || n.includes('outbound call') ||
+    n.includes('voice agent') || n.includes('call rubric') ||
+    n.includes('rippit') || n.includes('onboarding call') || n.includes('voice')
+  ) return 'elevenlabs';
+  // N8N workflows
+  if (
+    n.includes('n8n') || n.includes('workflow') || n.includes('supabase') ||
+    n.includes('powerbi') || n.includes('power bi') || n.includes('tier agent') ||
+    n.includes('notion') || n.includes('rag') || n.includes('brain') ||
+    n.includes('customer tier') || n.includes('salesforce') || n.includes('automation') ||
+    n.includes('claude') || n.includes('email') || n.includes('zapier')
+  ) return 'n8n';
+  return 'general';
+}
 
 const MOCK_TASKS: ClickUpTask[] = [
   {
     id: 'mock-cu-1',
-    name: 'FIN AI Automation — Resolution Rate Improvement',
+    name: 'FIN Tool — Resolution Rate Improvement',
     status: 'in progress',
     statusColor: '#d4912a',
     url: '#',
     assignees: ['Alex Kovoor'],
     updatedAt: '2026-04-15T10:30:00Z',
+    platform: 'fin',
   },
   {
     id: 'mock-cu-2',
@@ -21,6 +48,7 @@ const MOCK_TASKS: ClickUpTask[] = [
     url: '#',
     assignees: ['Alex Kovoor'],
     updatedAt: '2026-04-14T14:20:00Z',
+    platform: 'elevenlabs',
   },
   {
     id: 'mock-cu-3',
@@ -30,6 +58,7 @@ const MOCK_TASKS: ClickUpTask[] = [
     url: '#',
     assignees: ['Alex Kovoor'],
     updatedAt: '2026-04-12T09:15:00Z',
+    platform: 'n8n',
   },
   {
     id: 'mock-cu-4',
@@ -39,24 +68,47 @@ const MOCK_TASKS: ClickUpTask[] = [
     url: '#',
     assignees: ['Alex Kovoor'],
     updatedAt: '2026-04-10T11:00:00Z',
+    platform: 'n8n',
   },
   {
     id: 'mock-cu-5',
-    name: 'Claude Email Assistant — Inbox Triage',
+    name: 'Outbound Call Agent — Customer Follow-up',
     status: 'to do',
     statusColor: '#6a8870',
     url: '#',
     assignees: ['Alex Kovoor'],
     updatedAt: '2026-04-08T16:45:00Z',
+    platform: 'elevenlabs',
   },
   {
     id: 'mock-cu-6',
-    name: 'Notion Sync Agent — Weekly Report Automation',
+    name: 'FIN Tool — Billing & Account Query Handling',
     status: 'on hold',
     statusColor: '#e05858',
     url: '#',
     assignees: ['Alex Kovoor'],
     updatedAt: '2026-04-05T08:00:00Z',
+    platform: 'fin',
+  },
+  {
+    id: 'mock-cu-7',
+    name: 'N8N Notion Sync Agent — Weekly Reporting',
+    status: 'complete',
+    statusColor: '#3dba62',
+    url: '#',
+    assignees: ['Alex Kovoor'],
+    updatedAt: '2026-04-03T12:00:00Z',
+    platform: 'n8n',
+  },
+  {
+    id: 'mock-cu-8',
+    name: 'Customer Tier Agent — Lead Scoring Automation',
+    status: 'in progress',
+    statusColor: '#d4912a',
+    url: '#',
+    assignees: ['Alex Kovoor'],
+    updatedAt: '2026-04-13T09:00:00Z',
+    platform: 'n8n',
   },
 ];
 
@@ -73,14 +125,16 @@ export async function GET() {
     const tasks: ClickUpTask[] = raw.map((t) => {
       const status = t.status as { status?: string; color?: string } | undefined;
       const assignees = (t.assignees as Array<{ username?: string; email?: string }> | undefined) ?? [];
+      const name = (t.name as string) ?? '';
       return {
         id: (t.id as string) ?? '',
-        name: (t.name as string) ?? '',
+        name,
         status: status?.status ?? 'unknown',
         statusColor: status?.color ?? '#6a8870',
         url: (t.url as string) ?? '#',
         assignees: assignees.map((a) => a.username ?? a.email ?? 'Unknown'),
         updatedAt: new Date((t.date_updated as number) ?? 0).toISOString(),
+        platform: detectPlatform(name),
       };
     });
 

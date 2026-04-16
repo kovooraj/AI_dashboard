@@ -95,6 +95,8 @@ export interface ElevenLabsSnapshot {
 }
 
 // ── ClickUp task type ────────────────────────────────────────────────────────
+export type TaskPlatform = 'n8n' | 'fin' | 'elevenlabs' | 'general';
+
 export interface ClickUpTask {
   id: string;
   name: string;
@@ -103,6 +105,7 @@ export interface ClickUpTask {
   url: string;
   assignees: string[];
   updatedAt: string;
+  platform: TaskPlatform;
 }
 
 // ── Chart data points ────────────────────────────────────────────────────────
@@ -118,9 +121,14 @@ export interface VolumePoint {
   resolved: number;
 }
 
-// ── Sidebar workflow item ────────────────────────────────────────────────────
+// ── Sidebar workflow item (extended with live stats) ─────────────────────────
 export interface SidebarWorkflow {
   id: string;
   name: string;
-  health: 'healthy' | 'degraded' | 'failing';
+  health: 'healthy' | 'degraded' | 'failing' | 'unknown';
+  successRate?: number | null;
+  lastRunAt?: string | null;
+  failureCount?: number;
+  runningCount?: number;
+  executions?: N8nExecution[];
 }

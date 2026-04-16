@@ -59,10 +59,8 @@ export function FINPage() {
 
   const resolutionRate = latest?.finAutomationRate ?? 28;
 
-  // Filter FIN-related projects
-  const finProjects = projects.filter(
-    (p) => p.name.toLowerCase().includes('fin') || p.name.toLowerCase().includes('chat') || p.name.toLowerCase().includes('resolution')
-  );
+  // Filter FIN-related projects by platform tag
+  const finProjects = projects.filter((p) => p.platform === 'fin');
   const displayProjects = finProjects.length > 0 ? finProjects : projects.slice(0, 4);
 
   return (

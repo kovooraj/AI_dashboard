@@ -59,10 +59,8 @@ export function ElevenLabsPage() {
     }))
   );
 
-  // Filter call-related projects
-  const callProjects = projects.filter(
-    (p) => p.name.toLowerCase().includes('eleven') || p.name.toLowerCase().includes('call') || p.name.toLowerCase().includes('voice')
-  );
+  // Filter ElevenLabs-related projects by platform tag
+  const callProjects = projects.filter((p) => p.platform === 'elevenlabs');
   const displayProjects = callProjects.length > 0 ? callProjects : projects.slice(0, 4);
 
   return (
