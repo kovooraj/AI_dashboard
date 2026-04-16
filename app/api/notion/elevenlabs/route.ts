@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { queryDatabase, getNumber, getText } = await import('@/lib/notion');
+    const { queryDatabase, getNumber, getText, getFormula } = await import('@/lib/notion');
 
     const limit =
       period === 'weekly' ? 7
@@ -107,13 +107,13 @@ export async function GET(request: NextRequest) {
 
     const snapshots: ElevenLabsSnapshot[] = rows.slice(0, limit).map((row) => ({
       id: (row.id as string) ?? '',
-      weekLabel: getText(row, 'Week Label') || getText(row, 'Name') || getText(row, 'Title'),
-      calls: getNumber(row, 'Total Calls') || getNumber(row, 'Calls'),
-      avgDuration: getNumber(row, 'Avg Duration') || getNumber(row, 'Average Duration'),
-      transferRate: getNumber(row, 'Transfer Rate') || getNumber(row, 'Transferred to Live Agent'),
-      agents: getNumber(row, 'Agents') || getNumber(row, 'Active Agents'),
-      hoursSaved: getNumber(row, 'Hours Saved') || getNumber(row, 'Estimated Hours Saved'),
-      revenueImpact: getNumber(row, 'Revenue Impact') || getNumber(row, 'Estimated Revenue Impact'),
+      weekLabel: getText(row, 'Week Label'),
+      calls: getNumber(row, 'ElevenLabs Calls'),
+      avgDuration: getNumber(row, 'ElevenLabs Average Call Duration'),
+      transferRate: getNumber(row, 'Transfer to live agent %'),
+      agents: getNumber(row, 'Active ElevenLabs Agents'),
+      hoursSaved: getFormula(row, 'Total Hours Saved'),
+      revenueImpact: getFormula(row, 'Total Revenue Impact'),
     }));
 
     return NextResponse.json({ snapshots, mock: false });

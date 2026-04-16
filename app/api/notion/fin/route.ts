@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { queryDatabase, getNumber, getText } = await import('@/lib/notion');
+    const { queryDatabase, getNumber, getText, getFormula } = await import('@/lib/notion');
 
     const limit =
       period === 'weekly' ? 7
@@ -107,13 +107,13 @@ export async function GET(request: NextRequest) {
 
     const snapshots: FINSnapshot[] = rows.slice(0, limit).map((row) => ({
       id: (row.id as string) ?? '',
-      weekLabel: getText(row, 'Week Label') || getText(row, 'Name') || getText(row, 'Title'),
-      finInvolvement: getNumber(row, 'FIN Involvement') || getNumber(row, 'Total Conversations'),
-      finResolved: getNumber(row, 'FIN Resolved') || getNumber(row, 'Resolved'),
-      finAutomationRate: getNumber(row, 'FIN Automation Rate') || getNumber(row, 'Resolution Rate'),
-      csat: getNumber(row, 'CSAT') || getNumber(row, 'CSAT Score'),
-      hoursSaved: getNumber(row, 'Hours Saved') || getNumber(row, 'Estimated Hours Saved'),
-      revenueImpact: getNumber(row, 'Revenue Impact') || getNumber(row, 'Estimated Revenue Impact'),
+      weekLabel: getText(row, 'Week Label'),
+      finInvolvement: getNumber(row, 'Fin Involvement'),
+      finResolved: getNumber(row, 'FIN Resolved'),
+      finAutomationRate: getNumber(row, 'Fin Automation Rate'),
+      csat: getNumber(row, 'CSAT'),
+      hoursSaved: getFormula(row, 'Total Hours Saved'),
+      revenueImpact: getFormula(row, 'Total Revenue Impact'),
     }));
 
     return NextResponse.json({ snapshots, mock: false });

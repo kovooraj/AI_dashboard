@@ -70,3 +70,12 @@ export function getSelect(page: Record<string, unknown>, key: string): string {
   const sel = prop.select as { name: string } | null;
   return sel?.name ?? '';
 }
+
+export function getFormula(page: Record<string, unknown>, key: string): number {
+  const prop = getProp(page, key);
+  if (!prop) return 0;
+  const formula = prop.formula as { type?: string; number?: number; string?: string } | undefined;
+  if (formula?.type === 'number') return formula.number ?? 0;
+  if (formula?.type === 'string' && formula.string) return parseFloat(formula.string) || 0;
+  return formula?.number ?? 0;
+}

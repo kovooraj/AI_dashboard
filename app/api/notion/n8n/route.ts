@@ -106,19 +106,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { queryDatabase, getNumber, getText, getSelect } = await import('@/lib/notion');
-
-    // Build filter for period
-    let filter: object | undefined;
-    if (period === 'weekly') {
-      // Last 7 weeks — no filter, sort by week desc, take 7
-    } else if (period === 'monthly') {
-      // Last 4 weeks
-    }
+    const { queryDatabase, getNumber, getText, getSelect, getFormula } = await import('@/lib/notion');
 
     const rows = await queryDatabase(
       DB_ID,
-      filter,
+      undefined,
       [{ property: 'Week Number', direction: 'descending' }]
     );
 
@@ -130,15 +122,15 @@ export async function GET(request: NextRequest) {
 
     const snapshots: N8NSnapshot[] = rows.slice(0, limit).map((row) => ({
       id: (row.id as string) ?? '',
-      weekLabel: getText(row, 'Week Label') || getText(row, 'Name') || getText(row, 'Title'),
+      weekLabel: getText(row, 'Week Label'),
       weekNumber: getNumber(row, 'Week Number'),
       quarter: getSelect(row, 'Quarter'),
       totalTriggers: getNumber(row, 'Total Triggers'),
-      failedTriggers: getNumber(row, 'Total Failed Triggers') || getNumber(row, 'Failed Triggers'),
-      activeWorkflows: getNumber(row, 'Active Workflows'),
-      newWorkflows: getNumber(row, 'New Workflows'),
-      hoursSaved: getNumber(row, 'Hours Saved') || getNumber(row, 'Estimated Hours Saved'),
-      revenueImpact: getNumber(row, 'Revenue Impact') || getNumber(row, 'Estimated Revenue Impact'),
+      failedTriggers: getNumber(row, 'Total Failed Triggers'),
+      activeWorkflows: getNumber(row, 'Total Active Workflows'),
+      newWorkflows: getNumber(row, 'New Workflows Launched'),
+      hoursSaved: getFormula(row, 'Total Hours Saved'),
+      revenueImpact: getFormula(row, 'Total Revenue Impact'),
     }));
 
     return NextResponse.json({ snapshots, mock: false });
