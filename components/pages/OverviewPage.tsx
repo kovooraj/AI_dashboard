@@ -37,10 +37,9 @@ function buildRecs(
   el: ElevenLabsSnapshot | null,
   projects: ClickUpTask[]
 ) {
-  const completedProjects = projects.filter((p) => p.status === 'complete').length;
-  const totalProjects = projects.length || 1;
   const inProgress = projects.filter((p) => p.status === 'in progress').length;
-  const pct = Math.round((completedProjects / totalProjects) * 100);
+  const done = projects.filter((p) => p.status === 'complete').length;
+  const scoping = projects.filter((p) => p.status === 'planning / scoping').length;
   const failingCount = n8n?.failedTriggers ?? 0;
   const finRate = fin?.finAutomationRate ?? 0;
   const transferRate = el?.transferRate ?? 50;
@@ -48,8 +47,8 @@ function buildRecs(
   const totalTriggers = (n8n?.totalTriggers ?? 0) + (fin?.finInvolvement ?? 0) + (el?.calls ?? 0);
 
   const tracking = inProgress > 0
-    ? `${completedProjects}/${totalProjects} projects complete (${pct}%). ${inProgress} in progress — close open items to hit Q${currentQuarter()} OKR targets. Review bottlenecked tasks and unblock them this sprint.`
-    : `${completedProjects}/${totalProjects} projects complete (${pct}%). Pipeline looks clear — pull new initiatives from the backlog to maintain momentum.`;
+    ? `${inProgress} task${inProgress > 1 ? 's' : ''} in progress, ${scoping} in scoping, ${done} complete. Focus on unblocking high-priority items to hit Q${currentQuarter()} OKR targets this sprint.`
+    : `${done} tasks complete, ${scoping} in scoping. Pipeline looks clear — pull new initiatives from the backlog to maintain momentum.`;
 
   const roi = failingCount > 0
     ? `${failingCount} workflow${failingCount > 1 ? 's are' : ' is'} failing and costing automation hours. Fix these immediately. FIN is resolving ${finRate}% autonomously — target 40%+ by expanding its knowledge base. ElevenLabs is deflecting ${deflection}% of calls — a further 10% improvement would save ~${Math.round(((el?.calls ?? 100) * 0.1 * 39) / 3600)} additional hours/week.`
@@ -108,8 +107,11 @@ export function OverviewPage() {
     ? Math.round(((latestN8N.totalTriggers - latestN8N.failedTriggers) / Math.max(1, latestN8N.totalTriggers)) * 100)
     : 94;
 
-  const completedProjects = projects.filter((p) => p.status === 'complete').length;
-  const totalProjects     = projects.length || 6;
+  const backlogProjects    = projects.filter((p) => p.status === 'to do');
+  const scopingProjects    = projects.filter((p) => p.status === 'planning / scoping');
+  const inProgressProjects = projects.filter((p) => p.status === 'in progress');
+  const completedProjects  = projects.filter((p) => p.status === 'complete');
+  const highUrgentInProg   = inProgressProjects.filter((p) => p.priority === 'high' || p.priority === 'urgent');
 
   const chartData: ChartPoint[] = buildSuccessChartData(
     n8nSnapshots.map((s) => ({ totalTriggers: s.totalTriggers, failedTriggers: s.failedTriggers, weekLabel: s.weekLabel }))
@@ -193,27 +195,62 @@ export function OverviewPage() {
           {/* Row 1 — Project tracking */}
           <div style={{ display: 'flex', alignItems: 'flex-start', padding: '20px 20px', borderBottom: '1px solid #1a2c1d', gap: 20 }}>
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: '1rem', fontWeight: 700, color: '#e4ede6', marginBottom: 8 }}>AI Projects Initiative Tracking</p>
+              <p style={{ fontSize: '1rem', fontWeight: 700, color: '#e4ede6', marginBottom: 10 }}>AI Projects Initiative Tracking</p>
+
+              {/* Status pill row */}
+              {!loading && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                  {[
+                    { label: 'Backlog', count: backlogProjects.length, color: '#6a8870' },
+                    { label: 'Scoping', count: scopingProjects.length, color: '#4a9eca' },
+                    { label: 'In Progress', count: inProgressProjects.length, color: '#d4912a' },
+                    { label: 'Done', count: completedProjects.length, color: '#3dba62' },
+                  ].map(({ label, count, color }) => (
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 4, background: `${color}14`, border: `1px solid ${color}40` }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
+                      <span style={{ fontSize: '0.7rem', color, fontWeight: 600 }}>{label}</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#e4ede6' }}>{count}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <p style={{ fontSize: '0.875rem', color: '#8aad90', lineHeight: 1.7 }}>
                 {loading ? 'Loading…' : recs.tracking}
               </p>
-              {!loading && projects.filter((p) => p.status === 'in progress').length > 0 && (
+
+              {/* High/urgent in-progress task chips */}
+              {!loading && highUrgentInProg.length > 0 && (
                 <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-                  {projects.filter((p) => p.status === 'in progress').slice(0, 3).map((p) => (
-                    <span key={p.id} style={{ fontSize: '0.7rem', padding: '3px 8px', borderRadius: 4, background: 'rgba(212,145,42,0.12)', border: '1px solid rgba(212,145,42,0.3)', color: '#d4912a' }}>
+                  {highUrgentInProg.slice(0, 4).map((p) => (
+                    <a
+                      key={p.id}
+                      href={p.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.7rem', padding: '3px 8px', borderRadius: 4, background: 'rgba(212,145,42,0.12)', border: '1px solid rgba(212,145,42,0.3)', color: '#d4912a', textDecoration: 'none', cursor: 'pointer' }}
+                    >
                       {p.name.length > 42 ? p.name.slice(0, 42) + '…' : p.name}
-                    </span>
+                    </a>
                   ))}
                 </div>
               )}
             </div>
-            <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexShrink: 0 }}>
-              <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#e4ede6' }}>
-                {loading ? '—' : `${completedProjects}/${totalProjects}`}
-              </span>
-              <span style={{ fontSize: '1rem', fontWeight: 700, color: '#3dba62' }}>
-                {loading ? '' : `${Math.round((completedProjects / Math.max(1, totalProjects)) * 100)}%`}
-              </span>
+
+            {/* Right: High/urgent in-progress count */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+              {loading ? (
+                <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#e4ede6' }}>—</span>
+              ) : (
+                <>
+                  <span style={{ fontSize: '2rem', fontWeight: 700, color: highUrgentInProg.length > 0 ? '#d4912a' : '#3dba62' }}>
+                    {highUrgentInProg.length}
+                  </span>
+                  <span style={{ fontSize: '0.65rem', color: '#6a8870', textAlign: 'right', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                    High Priority<br />In Progress
+                  </span>
+                </>
+              )}
             </div>
           </div>
 

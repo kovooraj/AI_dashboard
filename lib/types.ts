@@ -106,6 +106,7 @@ export interface ClickUpTask {
   assignees: string[];
   updatedAt: string;
   platform: TaskPlatform;
+  priority: 'urgent' | 'high' | 'normal' | 'low' | null;
 }
 
 // ── Chart data points ────────────────────────────────────────────────────────

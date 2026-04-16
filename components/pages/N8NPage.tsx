@@ -2,13 +2,15 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, ExternalLink } from 'lucide-react';
 import { PeriodTabs } from '@/components/PeriodTabs';
 import { ProgressMetric } from '@/components/ProgressMetric';
 import { BenchKPICard } from '@/components/BenchKPICard';
 import { AutomationWorkflowSidebar } from '@/components/AutomationWorkflowSidebar';
-import type { DashboardPeriod, N8NSnapshot, SidebarWorkflow, ChartPoint, ClickUpTask, WorkflowHealthData } from '@/lib/types';
+import type { DashboardPeriod, N8NSnapshot, SidebarWorkflow, ChartPoint, ClickUpTask, WorkflowHealthData, N8nExecution } from '@/lib/types';
 import { buildSuccessChartData, formatCurrency, formatHours } from '@/lib/chartUtils';
+
+const N8N_BASE_URL = 'https://n8n.sinaprinting.com';
 
 const SuccessChart = dynamic(
   () => import('@/components/charts/SuccessChart').then((m) => m.SuccessChart),
@@ -99,16 +101,36 @@ function WorkflowsOverview({ workflows }: { workflows: SidebarWorkflow[] }) {
   );
 }
 
+/** Build daily buckets from executions for the chart */
+function buildExecChartData(executions: N8nExecution[]): ChartPoint[] {
+  const buckets = new Map<string, { success: number; error: number }>();
+  executions.forEach((exec) => {
+    if (!exec.startedAt) return;
+    const day = new Date(exec.startedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+    const cur = buckets.get(day) ?? { success: 0, error: 0 };
+    if (exec.status === 'success') cur.success++;
+    else if (exec.status === 'error' || exec.status === 'crashed') cur.error++;
+    buckets.set(day, cur);
+  });
+  // Return in chronological order (oldest first)
+  return Array.from(buckets.entries())
+    .reverse()
+    .map(([label, { success, error }]) => ({ label, success, error }));
+}
+
 /** Detail view for a single selected workflow */
 function WorkflowDetail({ workflow }: { workflow: SidebarWorkflow }) {
   const color = HEALTH_COLOR[workflow.health] ?? '#6a8870';
   const label = HEALTH_LABEL[workflow.health] ?? workflow.health;
   const executions = workflow.executions ?? [];
+  const chartData = buildExecChartData(executions);
+  const workflowUrl = `${N8N_BASE_URL}/workflow/${workflow.id}`;
 
   return (
     <>
+      {/* Header row: name + badge + open link */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#e4ede6', margin: 0 }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#e4ede6', margin: 0, flex: 1 }}>
           {workflow.name}
         </h1>
         <span style={{
@@ -118,10 +140,25 @@ function WorkflowDetail({ workflow }: { workflow: SidebarWorkflow }) {
         }}>
           {label}
         </span>
+        <a
+          href={workflowUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            padding: '5px 12px', borderRadius: 6,
+            background: 'rgba(61,186,98,0.1)', border: '1px solid rgba(61,186,98,0.35)',
+            color: '#3dba62', fontSize: '0.7rem', fontWeight: 700,
+            textDecoration: 'none', letterSpacing: '0.06em',
+            textTransform: 'uppercase', flexShrink: 0,
+          }}
+        >
+          Open in n8n <ExternalLink size={11} />
+        </a>
       </div>
 
       {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 28 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
         <div style={{ background: '#0d1810', border: '1px solid #1a2c1d', borderRadius: 8, padding: 16 }}>
           <p style={{ fontSize: '0.65rem', color: '#6a8870', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Success Rate</p>
           <p style={{ fontSize: '1.5rem', fontWeight: 700, color: workflow.successRate != null ? (workflow.successRate >= 80 ? '#3dba62' : workflow.successRate >= 50 ? '#d4912a' : '#e05858') : '#6a8870' }}>
@@ -141,6 +178,16 @@ function WorkflowDetail({ workflow }: { workflow: SidebarWorkflow }) {
           </p>
         </div>
       </div>
+
+      {/* Execution history chart */}
+      {chartData.length > 0 && (
+        <div style={{ background: '#0d1810', border: '1px solid #1a2c1d', borderRadius: 8, padding: 16, marginBottom: 24 }}>
+          <p style={{ fontSize: '0.65rem', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#6a8870', marginBottom: 12 }}>
+            Triggers &amp; Errors — Execution History
+          </p>
+          <SuccessChart data={chartData} />
+        </div>
+      )}
 
       <SectionHeader eyebrow="2. RECENT EXECUTIONS" title="Recent Automation Runs" />
       {executions.length === 0 ? (
@@ -261,7 +308,6 @@ export function N8NPage({ sidebarWorkflows }: N8NPageProps) {
   const failingWorkflows = workflows.filter((w) => w.health === 'failing');
 
   const n8nProjects = projects.filter((p) => p.platform === 'n8n');
-  const displayProjects = n8nProjects.length > 0 ? n8nProjects : projects.filter((p) => p.platform === 'general').slice(0, 4);
 
   return (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
@@ -367,19 +413,23 @@ export function N8NPage({ sidebarWorkflows }: N8NPageProps) {
               )}
 
               {/* N8N ClickUp Projects */}
-              {!liveLoading && displayProjects.length > 0 && (
+              {!liveLoading && n8nProjects.length > 0 && (
                 <div style={{ marginTop: 28 }}>
                   <SectionHeader eyebrow="3. AI PROJECTS" title="N8N Workflow Projects" />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {displayProjects.map((project) => {
+                    {n8nProjects.map((project) => {
                       const statusColor = STATUS_COLORS[project.status] ?? '#6a8870';
                       return (
-                        <div
+                        <a
                           key={project.id}
+                          href={project.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           style={{
                             background: '#0d1810', border: '1px solid #1a2c1d', borderRadius: 8,
                             padding: '12px 14px', display: 'flex', justifyContent: 'space-between',
-                            alignItems: 'center', gap: 12,
+                            alignItems: 'center', gap: 12, textDecoration: 'none',
+                            cursor: 'pointer',
                           }}
                         >
                           <div style={{ flex: 1, minWidth: 0 }}>
@@ -404,7 +454,7 @@ export function N8NPage({ sidebarWorkflows }: N8NPageProps) {
                               Updated {new Date(project.updatedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
                             </span>
                           </div>
-                        </div>
+                        </a>
                       );
                     })}
                   </div>

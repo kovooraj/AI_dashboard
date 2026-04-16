@@ -65,9 +65,7 @@ export function ElevenLabsPage() {
     }))
   );
 
-  // Filter ElevenLabs-related projects by platform tag
   const callProjects = projects.filter((p) => p.platform === 'elevenlabs');
-  const displayProjects = callProjects.length > 0 ? callProjects : projects.slice(0, 4);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
@@ -177,11 +175,14 @@ export function ElevenLabsPage() {
         {/* Section 3 */}
         <SectionHeader eyebrow="3. AUTOMATIONS" title="Call Related Projects" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {(loading ? [] : displayProjects).map((project) => {
+          {(loading ? [] : callProjects).map((project) => {
             const statusColor = STATUS_COLORS[project.status] ?? '#6a8870';
             return (
-              <div
+              <a
                 key={project.id}
+                href={project.url}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   background: '#0d1810',
                   border: '1px solid #1a2c1d',
@@ -191,6 +192,8 @@ export function ElevenLabsPage() {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   gap: 12,
+                  textDecoration: 'none',
+                  cursor: 'pointer',
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -223,12 +226,17 @@ export function ElevenLabsPage() {
                     Updated {new Date(project.updatedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
                   </span>
                 </div>
-              </div>
+              </a>
             );
           })}
           {loading && (
             <div style={{ background: '#0d1810', border: '1px solid #1a2c1d', borderRadius: 8, padding: 20, textAlign: 'center' }}>
-              <p style={{ fontSize: '0.75rem', color: '#6a8870' }}>Loading projects...</p>
+              <p style={{ fontSize: '0.75rem', color: '#6a8870' }}>Loading projects…</p>
+            </div>
+          )}
+          {!loading && callProjects.length === 0 && (
+            <div style={{ background: '#0d1810', border: '1px solid #1a2c1d', borderRadius: 8, padding: 20, textAlign: 'center' }}>
+              <p style={{ fontSize: '0.75rem', color: '#6a8870' }}>No 11labs-tagged tasks found in ClickUp.</p>
             </div>
           )}
         </div>

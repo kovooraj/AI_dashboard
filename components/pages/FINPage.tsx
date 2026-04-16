@@ -65,9 +65,7 @@ export function FINPage() {
 
   const resolutionRate = latest?.finAutomationRate ?? 28;
 
-  // Filter FIN-related projects by platform tag
   const finProjects = projects.filter((p) => p.platform === 'fin');
-  const displayProjects = finProjects.length > 0 ? finProjects : projects.slice(0, 4);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
@@ -172,11 +170,14 @@ export function FINPage() {
         {/* Section 3 */}
         <SectionHeader eyebrow="3. AUTOMATIONS" title="Fin Related Projects" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {(loading ? [] : displayProjects).map((project) => {
+          {(loading ? [] : finProjects).map((project) => {
             const statusColor = STATUS_COLORS[project.status] ?? '#6a8870';
             return (
-              <div
+              <a
                 key={project.id}
+                href={project.url}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   background: '#0d1810',
                   border: '1px solid #1a2c1d',
@@ -186,6 +187,8 @@ export function FINPage() {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   gap: 12,
+                  textDecoration: 'none',
+                  cursor: 'pointer',
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -218,12 +221,17 @@ export function FINPage() {
                     Updated {new Date(project.updatedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}
                   </span>
                 </div>
-              </div>
+              </a>
             );
           })}
           {loading && (
             <div style={{ background: '#0d1810', border: '1px solid #1a2c1d', borderRadius: 8, padding: 20, textAlign: 'center' }}>
-              <p style={{ fontSize: '0.75rem', color: '#6a8870' }}>Loading projects...</p>
+              <p style={{ fontSize: '0.75rem', color: '#6a8870' }}>Loading projects…</p>
+            </div>
+          )}
+          {!loading && finProjects.length === 0 && (
+            <div style={{ background: '#0d1810', border: '1px solid #1a2c1d', borderRadius: 8, padding: 20, textAlign: 'center' }}>
+              <p style={{ fontSize: '0.75rem', color: '#6a8870' }}>No FIN-tagged tasks found in ClickUp.</p>
             </div>
           )}
         </div>

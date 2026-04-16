@@ -67,6 +67,8 @@ export async function GET() {
       const name = (t.name as string) ?? '';
       const tagNames = ((t.tags as Array<{ name: string }>) ?? []).map((tag) => tag.name);
       const platform = detectPlatformFromTags(tagNames) ?? detectPlatformFromName(name);
+      const rawPriority = t.priority as { priority?: string } | null | undefined;
+      const priority = (rawPriority?.priority ?? null) as ClickUpTask['priority'];
       return {
         id: (t.id as string) ?? '',
         name,
@@ -76,6 +78,7 @@ export async function GET() {
         assignees: assignees.map((a) => a.username ?? a.email ?? 'Unknown'),
         updatedAt: new Date((t.date_updated as number) ?? 0).toISOString(),
         platform,
+        priority,
       };
     });
 
